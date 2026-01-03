@@ -26,7 +26,7 @@ jobs:
         python-version: '3.11'
         cache: 'pip'
     
-    - name: 📦 Install system dependencies
+    - name: 📦 Install system dependencies (for OCR)
       run: |
         sudo apt-get update
         sudo apt-get install -y \
@@ -41,39 +41,31 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: 🎭 Install Playwright browser only
-      run: |
-        playwright install chromium --with-deps
-      env:
-        PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright
-    
     - name: 🕐 Display current time
       run: |
         echo "⏰ Heure de démarrage: $(date '+%Y-%m-%d %H:%M:%S')"
         echo "🌍 Timezone: $(timedatectl show --property=Timezone --value)"
     
-    - name: 🎯 Run scraper (Playwright - rapide)
+    - name: 🤖 Run scraper (Selenium - stable et fiable)
       run: |
-        python main.py --method playwright --export all
+        python main.py --method selenium --export all
       continue-on-error: true
-      env:
-        PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright
     
     - name: 📊 Display results summary
       if: always()
       run: |
         echo "📈 Résumé du scraping:"
         if [ -d "output/json" ]; then
-          echo "Fichiers JSON créés:"
-          ls -lh output/json/ | tail -n +2 || echo "Aucun fichier JSON"
+          echo "📁 Fichiers JSON:"
+          ls -lh output/json/ | tail -n +2 || echo "  Aucun fichier"
         fi
         if [ -d "output/csv" ]; then
-          echo "Fichiers CSV créés:"
-          ls -lh output/csv/ | tail -n +2 || echo "Aucun fichier CSV"
+          echo "📁 Fichiers CSV:"
+          ls -lh output/csv/ | tail -n +2 || echo "  Aucun fichier"
         fi
         if [ -d "output/screenshots" ]; then
-          echo "Screenshots créés:"
-          ls -lh output/screenshots/ | tail -n +2 || echo "Aucun screenshot"
+          echo "📁 Screenshots:"
+          ls -lh output/screenshots/ | tail -n +2 || echo "  Aucun fichier"
         fi
     
     - name: 💾 Commit and push results
@@ -97,7 +89,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: 📤 Upload artifacts (si échec du push)
+    - name: 📤 Upload artifacts (backup si échec)
       if: failure()
       uses: actions/upload-artifact@v4
       with:
