@@ -5,7 +5,7 @@ on:
     # Toutes les 30 minutes avec décalage de 5 minutes
     # Format: minute heure jour mois jour_semaine
     # 5,35 * * * * = à 5 et 35 minutes de chaque heure
-    - cron: '5,35 * * * *'
+    - 
   
   # Permet de lancer manuellement depuis l'interface GitHub
   workflow_dispatch:
