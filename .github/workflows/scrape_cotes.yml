@@ -1,0 +1,102 @@
+name: Scrape Cotes Boostées Winamax
+
+on:
+  schedule:
+    # Toutes les 30 minutes avec décalage de 5 minutes
+    # Format: minute heure jour mois jour_semaine
+    # 5,35 * * * * = à 5 et 35 minutes de chaque heure
+    - cron: '5,35 * * * *'
+  
+  # Permet de lancer manuellement depuis l'interface GitHub
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: 📦 Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          tesseract-ocr \
+          tesseract-ocr-fra \
+          libtesseract-dev \
+          libgl1-mesa-glx \
+          libglib2.0-0
+    
+    - name: 📚 Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        playwright install chromium
+        playwright install-deps chromium
+    
+    - name: 🕐 Display current time
+      run: |
+        echo "⏰ Heure de démarrage: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "🌍 Timezone: $(timedatectl show --property=Timezone --value)"
+    
+    - name: 🎯 Run scraper (Playwright - rapide)
+      run: |
+        python main.py --method playwright --export all
+      continue-on-error: true
+    
+    - name: 📊 Display results summary
+      if: always()
+      run: |
+        echo "📈 Résumé du scraping:"
+        if [ -d "output/json" ]; then
+          echo "Fichiers JSON créés:"
+          ls -lh output/json/ | tail -n +2
+        fi
+        if [ -d "output/csv" ]; then
+          echo "Fichiers CSV créés:"
+          ls -lh output/csv/ | tail -n +2
+        fi
+    
+    - name: 💾 Commit and push results
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        # Ajouter tous les fichiers de sortie
+        git add output/
+        
+        # Vérifier s'il y a des changements
+        if git diff --staged --quiet; then
+          echo "✅ Aucun changement à commit"
+        else
+          # Créer un commit avec timestamp
+          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+          git commit -m "🤖 Scraping auto: $TIMESTAMP"
+          git push
+          echo "✅ Résultats pushés vers GitHub"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 📤 Upload artifacts (si échec du push)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: scraping-results-${{ github.run_number }}
+        path: output/
+        retention-days: 7
+    
+    - name: 🔔 Notify on failure
+      if: failure()
+      run: |
+        echo "❌ Le scraping a échoué à $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "Vérifiez les logs ci-dessus pour plus de détails"
