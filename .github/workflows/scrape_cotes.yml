@@ -33,7 +33,7 @@ jobs:
           tesseract-ocr \
           tesseract-ocr-fra \
           libtesseract-dev \
-          libgl1-mesa-glx \
+          libgl1 \
           libglib2.0-0
     
     - name: 📚 Install Python dependencies
