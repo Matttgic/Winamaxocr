@@ -10,7 +10,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import config
 
@@ -34,8 +33,21 @@ class SeleniumScraper:
         chrome_options.add_argument(f"user-agent={config.USER_AGENT}")
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         
-        service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Utiliser chromedriver du système (préinstallé sur GitHub Actions)
+        try:
+            # Essayer d'utiliser chromedriver du système
+            self.driver = webdriver.Chrome(options=chrome_options)
+        except Exception as e:
+            print(f"⚠️ Erreur avec le driver système: {e}")
+            # Fallback: essayer avec webdriver-manager
+            try:
+                from webdriver_manager.chrome import ChromeDriverManager
+                service = Service(ChromeDriverManager().install())
+                self.driver = webdriver.Chrome(service=service, options=chrome_options)
+            except Exception as e2:
+                print(f"❌ Erreur avec webdriver-manager: {e2}")
+                raise
+        
         self.driver.set_page_load_timeout(config.TIMEOUT)
         
     def scroll_page(self):
@@ -71,6 +83,7 @@ class SeleniumScraper:
                 # Extraire les informations
                 cote_data = {
                     'timestamp': datetime.now().isoformat(),
+                    'method': 'selenium',
                     'heure': '',
                     'sport': '',
                     'description': '',
