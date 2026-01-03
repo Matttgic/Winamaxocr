@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Playwright
+.playwright/
+playwright-report/
+test-results/
+
+# Logs
+*.log
+logs/
+
+# Screenshots (si vous ne voulez pas les commit)
+# output/screenshots/*.png
+
+# Données sensibles
+*.env
+.env.local
+secrets/
+
+# Tesseract
+tessdata/
+
+# Cache
+.cache/
+.pytest_cache/
+
+# Temporary files
+*.tmp
+temp/
+tmp/
